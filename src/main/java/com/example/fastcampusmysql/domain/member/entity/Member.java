@@ -25,15 +25,16 @@ public class Member {
         this.email = Objects.requireNonNull(email);
 
         validateNickname(nickname);
-
         this.nickname = Objects.requireNonNull(nickname);
-        this.createdAt = createdAt == null ? LocalDateTime.now() : createdAt; //널이면 now를 넣어주고 아니면 받은 걸 그대로 넣기
+
+        this.createdAt = createdAt == null ? LocalDateTime.now() : createdAt;
+        //널이면 now를 넣어주고 아니면 받은 걸 그대로 넣기
     }
     //닉네임 변경 메소드
-    public void changeNickname(String other){
-        Objects.requireNonNull(other); //null이 되면 안되는 값 설정
-        validateNickname(other); //10자 제한
-        nickname = other;
+    public void changeNickname(String to){
+        Objects.requireNonNull(to); //null이 되면 안되는 값 설정
+        validateNickname(to); //10자 제한
+        nickname = to;
     }
 
     //NAME 체크 함수

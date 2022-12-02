@@ -2,6 +2,7 @@ package com.example.fastcampusmysql.domain.member.repository;
 
 import com.example.fastcampusmysql.domain.member.entity.Member;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.support.DataAccessUtils;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.BeanPropertySqlParameterSource;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Repository;
 import java.sql.ResultSet;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @RequiredArgsConstructor
@@ -21,27 +23,26 @@ public class MemberRepository {
     final private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
     static final private String TABLE = "member";
+
+    static final RowMapper<Member> rowMapper = (ResultSet resultSet, int rowNum) -> Member //람다식?
+            .builder() //매핑 작업
+            .id(resultSet.getLong("id"))
+            .email(resultSet.getString("email"))
+            .nickname(resultSet.getString("nickname"))
+            .birthday(resultSet.getObject("birthday", LocalDate.class)) //클래스 참조. getLocalDate()함수는 없어서 오브젝트로 받음
+            .createdAt(resultSet.getObject("createdAt", LocalDateTime.class))
+            .build();
+
     // 회원 정보 조회
     public Optional<Member> findById(Long id){
-        // select *
-        // from Member
-        // Where id = : id
         var sql = String.format("SELECT * FROM %s WHERE id = :id", TABLE);//테이블 이름은 .withTableName("member") 이렇게 계속 써줘야 되는 것이 불편하니까 상단에서 상수로 선언해서 써주기로 한다.
-        var param = new MapSqlParameterSource()
+        var params = new MapSqlParameterSource()
                 .addValue("id",id); //WHERE id = :id" 이 때 id 값이 여기로 바인딩됨
-        //인터페이스 RowMapper 사용
-        RowMapper<Member> rowMapper = (ResultSet resultSet, int rowNum) -> Member //람다식?
-                .builder() //매핑 작업
-                .id(resultSet.getLong("id"))
-                .email(resultSet.getString("email"))
-                .nickname(resultSet.getString("nickname"))
-                .birthday(resultSet.getObject("birthday", LocalDate.class)) //클래스 참조. getLocalDate()함수는 없어서 오브젝트로 받음
-                .createdAt(resultSet.getObject("createdAt", LocalDateTime.class))
-                .build();
-        //builder().build();를 써서 단일? 단위 구문으로 끝날 수 있음
-        // 위의 것들 호출하기
-        var member = namedParameterJdbcTemplate.queryForObject(sql,param,rowMapper);
-        return Optional.ofNullable(member);
+        //갑자기 List가 왜 나왔을꼬 호출하는건가
+        List<Member> members = namedParameterJdbcTemplate.query(sql,params,rowMapper);
+
+        Member nullableMember = DataAccessUtils.singleResult(members);
+        return Optional.ofNullable(nullableMember);
     }
 
    //인터페이스 생성
@@ -74,7 +75,10 @@ public class MemberRepository {
     }
 
     private Member update(Member member){
-        // Implemented
+        //전체 업데이트로 진행
+        var sql = String.format("UPDATE %s set email = :email, nickname = :nickname, birthday = :birthday WHERE id = :id",TABLE);
+        SqlParameterSource params = new BeanPropertySqlParameterSource(member);
+        namedParameterJdbcTemplate.update(sql, params); //반환값이 Int
         return member;
     }
 }
