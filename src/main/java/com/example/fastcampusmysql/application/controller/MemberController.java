@@ -1,5 +1,5 @@
 
-package com.example.fastcampusmysql.controller;
+package com.example.fastcampusmysql.application.controller;
 
 import com.example.fastcampusmysql.domain.member.dto.MemberDTO;
 import com.example.fastcampusmysql.domain.member.dto.MemberNicknameHistoryDTO;
@@ -14,6 +14,7 @@ import java.util.List;
 
 @RequiredArgsConstructor
 @RestController
+@RequestMapping("/members")
 public class MemberController {
     final private MemberWriteService memberWriteService; //의존성 주입에 따른 어노테이션 추가
     final private MemberReadService memberReadService;
@@ -35,6 +36,8 @@ public class MemberController {
         memberWriteService.changeNickname(id, nickname);
         return memberReadService.getMember(id);
     }
+
+    //회원 닉네임 변경 히스토리 조회
     @GetMapping("/{memberId}/nickname-histories")
     public List<MemberNicknameHistoryDTO> getNicknameHistories(@PathVariable Long memberId) {
         return memberReadService.getNicknameHistories(memberId);

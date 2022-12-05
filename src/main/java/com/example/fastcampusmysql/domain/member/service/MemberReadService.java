@@ -15,12 +15,17 @@ import java.util.List;
 @Service
 public class MemberReadService {
     final private MemberRepository memberRepository;
-
     final private MemberNicknameHistoryRepository memberNicknameHistoryRepository;
 
     public MemberDTO getMember(Long id) {
         var member = memberRepository.findById(id).orElseThrow(); // orElseThrow 널 이면 예외 발생 적용
         return toDto(member);
+    }
+
+    //findAllByIdIn 구현
+    public List<MemberDTO> getMembers(List<Long> ids){
+        var members = memberRepository.findAllByIdIn(ids);
+        return members.stream().map(this::toDto).toList();
     }
 
     public List<MemberNicknameHistoryDTO> getNicknameHistories(Long memberId){

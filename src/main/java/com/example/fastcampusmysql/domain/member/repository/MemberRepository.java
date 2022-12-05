@@ -38,12 +38,22 @@ public class MemberRepository {
         var sql = String.format("SELECT * FROM %s WHERE id = :id", TABLE);//테이블 이름은 .withTableName("member") 이렇게 계속 써줘야 되는 것이 불편하니까 상단에서 상수로 선언해서 써주기로 한다.
         var params = new MapSqlParameterSource()
                 .addValue("id",id); //WHERE id = :id" 이 때 id 값이 여기로 바인딩됨
-        //갑자기 List가 왜 나왔을꼬 호출하는건가
+        //호출하기
         List<Member> members = namedParameterJdbcTemplate.query(sql,params,rowMapper);
 
         Member nullableMember = DataAccessUtils.singleResult(members);
         return Optional.ofNullable(nullableMember);
     }
+
+    // List In절을 받는 함수
+    public List<Member> findAllByIdIn(List<Long> ids){
+        if(ids.isEmpty())
+            return List.of();
+
+        var sql = String.format("SELECT * FROM %s WHERE id in (:ids)",TABLE);
+        var params = new MapSqlParameterSource().addValue("ids",ids);
+        return namedParameterJdbcTemplate.query(sql,params,rowMapper);
+    } // id로 BeanList가 넘어오면 (:ids) 파싱 실패로 문제가 발생할 수 있음
 
    //인터페이스 생성
     public Member save(Member member){
@@ -56,7 +66,7 @@ public class MemberRepository {
 
     //회원 정보 등록
     private Member insert(Member member){ //JDBC 템플릿 이용할 것이라 외부에서 주입 받기
-        //id 값을 받아서 반환할 건데 이것을 이요하면 쉽게 구현 가능함 . 갹체 생성하기
+        //id 값을 받아서 반환, SimpleJdbc를 활용해 쉽게 구현 가능함
         SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(namedParameterJdbcTemplate.getJdbcTemplate())
             //테이블 이름 지정
                 .withTableName("Member")
