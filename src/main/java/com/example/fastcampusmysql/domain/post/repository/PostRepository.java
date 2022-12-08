@@ -49,6 +49,23 @@ public class PostRepository {
         throw new UnsupportedOperationException("Post는 갱신을 지원하지 않습니다.");
     }
 
+    //대용량 데이터 모아서 한 번에 보내기
+    public void bulkInsert(List<Post> posts){
+        var sql = "INSERT INTO Post (memberId, contents, createdDate,createdAt)"
+                + "VALUES (:memberId, :contents, :createdDate, :createdAt)";
+
+        //        var sql = String.format("""
+        //                INSERT INTO 's%' (memberId, contents, createdDate, createdAt)
+        //                VALUES (:memberId, :contents, :createdDate, :createdAt)
+        //                """, TABLE); // 왜 안될까?
+
+        SqlParameterSource[] params = posts
+                .stream()
+                        .map(BeanPropertySqlParameterSource::new)
+                                .toArray(SqlParameterSource[]::new);
+        namedParameterJdbcTemplate.batchUpdate(sql,params);
+    }
+
     private Post insert(Post post){
         SimpleJdbcInsert jdbcInsert = new SimpleJdbcInsert(namedParameterJdbcTemplate.getJdbcTemplate())
                 .withTableName(TABLE)
